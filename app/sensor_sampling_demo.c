@@ -10,12 +10,11 @@
 #include <global_map.h>
 #include <cmsis_compiler.h>
 #include <se_services_port.h>
+#include <dma_mapping.h>
 
 #include <Driver_SPI.h>
-//#include <Driver_SPI_Private.h>
 #include "LPTIMER_config.h"
 #include "UTIMER_config.h"
-#include "drv_counter.h"
 
 #ifndef HW_REG32
 #define HW_REG32(u,v) (*((volatile uint32_t *)(u + v)))
@@ -100,8 +99,8 @@ void low_power_sensor_sampling_demo()
     for (uint32_t i = 0; i < SPI_TRANSFER_COUNT; i++) {
         spi_tx_buff[i] = spi_tx_data[i];
     }
+    RTSS_CleanInvalidateDCache_by_Addr(spi_tx_buff, sizeof spi_tx_buff);
 
-    refclk_cntr_init();
     configure_spi_pinmux();
 
     ret = ptrSPI->Initialize(SPI_cb_func);
@@ -147,7 +146,7 @@ void low_power_sensor_sampling_demo()
     while(ret == ARM_DRIVER_ERROR_BUSY);
     while(ret != ARM_DRIVER_OK);
 
-    UTIMER_config(get_AXI_CLOCK());
+    UTIMER_config(SystemAXIClock);
     LPTIMER_config();
 
     while(1) {
@@ -165,21 +164,21 @@ void low_power_sensor_sampling_demo()
         /* switch clocks to PLL */
 #if defined (M55_HP)
         CGU->PLL_CLK_SEL |= (1U << 16);         // switch RTSS-HP from HFXO to PLL
-        set_RTSS_HP_CLK(400000000);             // RTSS_HP_CLK is 400M
+        SystemCoreClock = 400000000;            // RTSS_HP_CLK is 400M
 #endif
 #if defined (M55_HE)
         CGU->PLL_CLK_SEL |= (1U << 20);         // switch RTSS-HE from HFXO to PLL
-        set_RTSS_HE_CLK(120000000);             // RTSS_HE_CLK is 120M
+        SystemCoreClock = 160000000;            // RTSS_HE_CLK is 160M
 #endif
         CGU->PLL_CLK_SEL |= (1U << 4);          // switch SYSPLL from HFXO to PLL
         AON->SYSTOP_CLK_DIV = 0x202;            // HCLK = ACLK/4 and PCLK = ACLK/4
         HW_REG32(CLKCTL_SYS_BASE, 0x820) = 2;   // ACLK source set to SYSPLL
 
-        set_AXI_CLOCK(100000000);               // SYST_ACLK is SYSPLL div by 4
-        set_AHB_CLOCK( 25000000);               // SYST_HCLK is ACLK div by 4
-        set_APB_CLOCK( 25000000);               // SYST_PCLK is ACLK div by 4
+        SystemAXIClock = 100000000;             // SYST_ACLK is SYSPLL div by 4
+        SystemAHBClock =  25000000;             // SYST_HCLK is ACLK div by 4
+        SystemAPBClock =  25000000;             // SYST_PCLK is ACLK div by 4
 
-        UTIMER_config(get_AXI_CLOCK());
+        UTIMER_config(SystemAXIClock);
         ptrSPI->Control(ARM_SPI_SET_BUS_SPEED, spi_freq);
         HW_REG32(GPIO5_BASE, 0x00) = 0;         // clock config end
 
@@ -189,10 +188,17 @@ void low_power_sensor_sampling_demo()
 
         /* Application has ~9.3 milliseconds to use spi_rx_buff directly or
          * copy the data to a local buffer as shown, before it is overwritten by the DMA */
+        RTSS_InvalidateDCache_by_Addr(spi_rx_buff + spi_rx_offset, sizeof(application_buffer));
+        memset(application_buffer, 0, sizeof application_buffer);
         memcpy(application_buffer, spi_rx_buff + spi_rx_offset, sizeof(application_buffer));
+        memset(spi_rx_buff + spi_rx_offset, 0, sizeof spi_tx_data);
+        ret = memcmp(application_buffer, spi_tx_data, sizeof spi_tx_data);
+        if (ret) {
+            while(1) __BKPT(0);
+        }
 
         /* Code to use application_buffer here */
-        delay_us_refclk(1250);
+        sys_busy_loop_us(1250);
 
         /* Application Code Ends Here */
 
@@ -200,21 +206,21 @@ void low_power_sensor_sampling_demo()
         HW_REG32(GPIO5_BASE,  0x00) = 1U << 4;  // clock config start
 
         /* set the clock variables */
-        set_AXI_CLOCK(get_HFXO_CLK());          // SYST_ACLK is SYSPLL div by 4
-        set_AHB_CLOCK(get_HFXO_CLK());          // SYST_HCLK is ACLK div by 1
-        set_APB_CLOCK(get_HFXO_CLK()>>1);       // SYST_PCLK is ACLK div by 2
+        SystemAXIClock = 9600000;               // SYST_ACLK is HFXO div by 4
+        SystemAHBClock = 9600000;               // SYST_HCLK is ACLK div by 1
+        SystemAPBClock = 4800000;               // SYST_PCLK is ACLK div by 2
+
 #if defined (M55_HP)
-        set_RTSS_HP_CLK(get_HFXO_CLK());
         CGU->PLL_CLK_SEL &= ~(1U << 16);        // switch RTSS-HP from PLL to HFXO
 #endif
 #if defined (M55_HE)
-        set_RTSS_HE_CLK(get_HFXO_CLK());
         CGU->PLL_CLK_SEL &= ~(1U << 20);        // switch RTSS-HE from PLL to HFXO
 #endif
+        SystemCoreClock = 9600000;              // RTSS_CORE_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
 
         UTIMER_sync();
 
-        UTIMER_config(get_AXI_CLOCK());
+        UTIMER_config(SystemAXIClock);
         ptrSPI->Control(ARM_SPI_SET_BUS_SPEED, spi_freq);
 
         HW_REG32(CLKCTL_SYS_BASE, 0x820) = 1;   // ACLK source set to REFCLK

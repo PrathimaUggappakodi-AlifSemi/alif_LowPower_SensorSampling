@@ -16,9 +16,9 @@
                 "monitor speed 15000"
             ],
             "postLaunchCommands": [
-                "set $sp = *0x80000000",
-                "set $pc = *0x80000004",
-                "set *0xe000ed08 = 0x80000000"
+                "set $sp = __Vectors[0]",
+                "set $pc = __Vectors[1]",
+                "set *0xe000ed08 = __Vectors"
             ]
         }
     ]
