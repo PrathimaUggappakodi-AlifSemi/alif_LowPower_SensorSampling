@@ -1,0 +1,120 @@
+diff --git a/Alif_CMSIS/Source/Driver_SPI.c b/Alif_CMSIS/Source/Driver_SPI.c
+index 0cff58c..cfc805b 100644
+--- a/Alif_CMSIS/Source/Driver_SPI.c
++++ b/Alif_CMSIS/Source/Driver_SPI.c
+@@ -74,12 +74,6 @@ __STATIC_INLINE ARM_SPI_CAPABILITIES ARM_SPI_GetCapabilities(void)
+ }
+ 
+ #if SPI_DMA_ENABLE
+-/* PATCH: SPI_DMA_RX_Control() and SPI_DMA_TX_Control() functions added
+- *          for inserting custom DMA microcode
+- */
+-#define USER_SPI_RX_MCODE_ENABLED 1
+-#define USER_SPI_TX_MCODE_ENABLED 1
+-
+ /**
+   \fn          int32_t SPI_DMA_Initialize(DMA_PERIPHERAL_CONFIG *dma_periph)
+   \brief       Initialize DMA for SPI
+@@ -193,44 +187,6 @@ static inline int32_t SPI_DMA_DeAllocate(DMA_PERIPHERAL_CONFIG *dma_periph)
+     return ARM_DRIVER_OK;
+ }
+ 
+-/* PATCH: SPI_DMA_RX_Control() and SPI_DMA_TX_Control() functions added
+- *          for inserting custom DMA microcode
+- */
+-#if USER_SPI_RX_MCODE_ENABLED
+-static inline int32_t SPI_DMA_RX_Control(DMA_PERIPHERAL_CONFIG *dma_periph, ARM_DMA_PARAMS *dma_params)
+-{
+-    int32_t        status;
+-    ARM_DRIVER_DMA *dma_drv = dma_periph->dma_drv;
+-    extern uint8_t user_spi_rx_mcode[];
+-
+-    /* Insert custom microcode on RX side */
+-    status = dma_drv->Control(&dma_periph->dma_handle, ARM_DMA_USER_PROVIDED_MCODE, (uint32_t) &user_spi_rx_mcode[0]);
+-    if (status)
+-    {
+-        return ARM_DRIVER_ERROR;
+-    }
+-
+-    return ARM_DRIVER_OK;
+-}
+-#endif
+-#if USER_SPI_TX_MCODE_ENABLED
+-static inline int32_t SPI_DMA_TX_Control(DMA_PERIPHERAL_CONFIG *dma_periph, ARM_DMA_PARAMS *dma_params)
+-{
+-    int32_t        status;
+-    ARM_DRIVER_DMA *dma_drv = dma_periph->dma_drv;
+-    extern uint8_t user_spi_tx_mcode[];
+-
+-    /* Insert custom microcode on TX side */
+-    status = dma_drv->Control(&dma_periph->dma_handle, ARM_DMA_USER_PROVIDED_MCODE, (uint32_t) &user_spi_tx_mcode[0]);
+-    if (status)
+-    {
+-        return ARM_DRIVER_ERROR;
+-    }
+-
+-    return ARM_DRIVER_OK;
+-}
+-#endif
+-
+ /**
+   \fn          int32_t SPI_DMA_Start(DMA_PERIPHERAL_CONFIG *dma_periph,
+                                      ARM_DMA_PARAMS *dma_params)
+@@ -1107,22 +1063,6 @@ static int32_t ARM_SPI_Transfer(SPI_RESOURCES *SPI, const void *data_out, void *
+             rx_dma_params.burst_size = BS_BYTE_1;
+         }
+ 
+-        /* PATCH: SPI_DMA_RX_Control() and SPI_DMA_TX_Control() functions added
+-         *          for inserting custom DMA microcode
+-         */
+-#if USER_SPI_RX_MCODE_ENABLED
+-        if (SPI_DMA_RX_Control(&SPI->dma_cfg->dma_rx, &rx_dma_params) != ARM_DRIVER_OK)
+-        {
+-            return ARM_DRIVER_ERROR;
+-        }
+-#endif
+-#if USER_SPI_TX_MCODE_ENABLED
+-        if (SPI_DMA_TX_Control(&SPI->dma_cfg->dma_tx, &tx_dma_params) != ARM_DRIVER_OK)
+-        {
+-            return ARM_DRIVER_ERROR;
+-        }
+-#endif
+-
+         if (SPI_DMA_Start(&SPI->dma_cfg->dma_rx, &rx_dma_params) != ARM_DRIVER_OK)
+         {
+             return ARM_DRIVER_ERROR;
+diff --git a/Device/common/include/dma_mapping.h b/Device/common/include/dma_mapping.h
+index da81e3b..60ef5c5 100644
+--- a/Device/common/include/dma_mapping.h
++++ b/Device/common/include/dma_mapping.h
+@@ -360,7 +360,7 @@ extern "C" {
+ 
+ #define SPI0_DMA                       0
+ #define SPI0_DMA_RX_PERIPH_REQ         16
+-#define SPI0_DMA_TX_PERIPH_REQ         1    /* FIXME: SPI0_DMA_TX_PERIPH_REQ was 20 for SPI0_TX, now 1 for UT0_1 */
++#define SPI0_DMA_TX_PERIPH_REQ         20
+ #define SPI0_DMA_GROUP                 2
+ #define SPI0_DMA_HANDSHAKE_ENABLE      1
+ 
+@@ -662,7 +662,7 @@ extern "C" {
+ #if (!RTE_LPUART_SELECT_DMA0)
+ #define LPUART_DMA                     2
+ #define LPUART_DMA_RX_PERIPH_REQ       8
+-#define LPUART_DMA_TX_PERIPH_REQ       26   /* FIXME: was 9 for LPUART_TX, now 26 for LPGPIO_2 */
++#define LPUART_DMA_TX_PERIPH_REQ       9
+ #define LPUART_DMA_GROUP               0
+ #define LPUART_DMA_HANDSHAKE_ENABLE    1
+ #endif
+diff --git a/Device/common/source/mpu_m55.c b/Device/common/source/mpu_m55.c
+index bf0b97d..f37a31f 100644
+--- a/Device/common/source/mpu_m55.c
++++ b/Device/common/source/mpu_m55.c
+@@ -64,7 +64,7 @@ void MPU_Load_Regions(void)
+         },
+         {   /* SRAM1 - 2.5MB : RO-0, NP-1, XN-0 */
+             .RBAR = ARM_MPU_RBAR(0x08000000, ARM_MPU_SH_NON, 0, 1, 0),
+-            .RLAR = ARM_MPU_RLAR(0x0827FFFF, MEMATTRIDX_NORMAL_WT_RA_TRANSIENT)
++            .RLAR = ARM_MPU_RLAR(0x0827FFFF, MEMATTRIDX_NORMAL_WB_RA_WA)
+         },
+         {   /* Host Peripherals - 16MB : RO-0, NP-1, XN-1 */
+             .RBAR = ARM_MPU_RBAR(0x1A000000, ARM_MPU_SH_NON, 0, 1, 1),
