@@ -9,13 +9,6 @@ Application Note
 **  
 **
 
-## Introduction:
-
-This is a use-case based low power demo for Alif Ensemble processors.
-
-In this Sensor Sampling use-case, we demonstrate how to continuously capture sensor data from an external SPI ADC at low power. We maximize CPU sleep time by using the DMA peripheral and hardware event routing to drive SPI xfers without CPU interaction. We also demonstrate a dynamic clock scaling scheme which optimizes the power drawing based on application need by switching system clocks between low frequency HFXO and high frequency PLL sources. At low clocks, the DMA can continuously capture sensor data from the ADC and place it into SRAM without ever needing to wake the CPU. Only after enough data is captured into SRAM, the CPU is woken up to process the data. To maximize operating efficiency, the data processing step is done at high frequency with the PLL enabled.
-
-Note: This demo is supported on Gen 2 Ensemble devices only. The demo may be run on the RTSS-HP or RTSS-HE.
 
 ## Reference Documents
 
@@ -53,7 +46,7 @@ To begin measuring power you will need to remove the jumper that is pre-installe
 
     - please attach a jumper wire connected between P4_0 and P15_0
 
-> Please refer to Devkit user guide to know more about the Devkit [User Guide](https://alifsemi.com/downloads/AUGD0010)
+      Please refer to Devkit user guide to know more about the Devkit [User Guide](https://alifsemi.com/downloads/AUGD0010)
 
 2.  Logic Analyzer (Saleae) to monitor the below MCU signals. The software for Saleae can be found [here](https://www.saleae.com/pages/downloads?srsltid=AfmBOopOdGfHGOcpz3zF-bRL4F6-iHsZcLLQkzedb-6c-G0wwCPyJ3Hp)
 
