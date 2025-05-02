@@ -8658,7 +8658,7 @@
 // <i> Defines Interrupt priority for GPIO5_PIN7.
 // <i> Default: 0
 #define RTE_GPIO5_PIN7_IRQ_PRIORITY     0
-#endif 
+#endif
 // </e> GPIO5
 
 // <e> GPIO6
@@ -9144,7 +9144,7 @@
 // <i> Defines Interrupt priority for GPIO11_PIN7.
 // <i> Default: 0
 #define RTE_GPIO11_PIN7_IRQ_PRIORITY     0
-#endif 
+#endif
 // </e> GPIO11
 
 // <e> GPIO12
@@ -9598,8 +9598,7 @@
 //     <1=> Enable
 // <i> define Handle Spurious Wakeup
 // <i> default: Enable
-#define PM_HANDLE_SPURIOUS_WAKEUP                 0
+#define PM_HANDLE_SPURIOUS_WAKEUP                 1
 // </h> Power Management (PM)
 
 #endif  /* __RTE_DEVICE_H */
-

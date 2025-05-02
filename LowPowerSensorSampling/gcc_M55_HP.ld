@@ -36,7 +36,7 @@ __ROM_SIZE      = 0x0057F000;
 MEMORY
 {
   ITCM  (rwx) : ORIGIN = 0x00000000, LENGTH = 0x00040000
-  DTCM  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00040000
+  DTCM  (rwx) : ORIGIN = 0x20000000, LENGTH = 0x00100000
   SRAM0 (rwx) : ORIGIN = 0x02000000, LENGTH = 0x00400000
   SRAM1 (rwx) : ORIGIN = 0x08000000, LENGTH = 0x00280000
   MRAM  (rx)  : ORIGIN = __ROM_BASE, LENGTH = __ROM_SIZE
@@ -50,15 +50,17 @@ SECTIONS
   {
     KEEP(*(.vectors))
 
-    *startup_M55_*.c.obj(.text .rodata*)
-    *system_M55.c.obj(.text .rodata*)
-    *mpu_M55.c.obj(.text .rodata*)
-    *system_utils.c.obj(.text .rodata*)
+    *startup_*(.text .rodata*)
+    *system_*(.text .rodata*)
+    *system_utils*(.text .rodata*)
+    *pm*(.text .rodata*)
+    *tgu_*(.text .rodata*)
+    *mpu_*(.text .rodata*)
+    *tcm_partition*(.text .rodata*)
 
-    *lv_*.c.obj(.text .rodata*)
+    *lv_*(.text .rodata*)
 
     *(startup_ro_data)
-
     . = ALIGN(16);
   } > MRAM
 
