@@ -14,8 +14,8 @@
 #define HW_REG32(u,v) (*((volatile uint32_t *)(u + v)))
 #endif
 
-extern ARM_DRIVER_LPTIMER DRIVER_LPTIMER0;
-static ARM_DRIVER_LPTIMER *ptrLPTIMER = &DRIVER_LPTIMER0;
+extern ARM_DRIVER_LPTIMER Driver_LPTIMER0;
+static ARM_DRIVER_LPTIMER *ptrLPTIMER = &Driver_LPTIMER0;
 
 volatile uint32_t lptimer_cb_status = 0;
 

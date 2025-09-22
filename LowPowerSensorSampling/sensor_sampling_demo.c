@@ -5,13 +5,16 @@
 #include <limits.h>
 
 #include <pm.h>
-#include <clk.h>
+#include <sys_clocks.h>
 #include <pinconf.h>
-#include <global_map.h>
+#include <soc.h>
 #include <cmsis_compiler.h>
+#include <soc_dma_map.h>
 #include <se_services_port.h>
+#include <sys_utils.h>
 
 #include <Driver_SPI.h>
+#include <Driver_SPI_EX.h>
 //#include <Driver_SPI_Private.h>
 #include "LPTIMER_config.h"
 #include "UTIMER_config.h"
@@ -69,10 +72,15 @@ static void configure_spi_pinmux()
             PADCTRL_OUTPUT_DRIVE_STRENGTH_4MA;
 
     /* Port 5 */
-    HW_REG32(PINMUX_BASE, 0xA0) = 4 | (padconf << 16);  /* P5_0 is SPI0_MISO */
-    HW_REG32(PINMUX_BASE, 0xA4) = 4 | (padconf << 16);  /* P5_1 is SPI0_MOSI */
-    HW_REG32(PINMUX_BASE, 0xA8) = 4 | (padconf << 16);  /* P5_2 is SPI0_SS0 */
-    HW_REG32(PINMUX_BASE, 0xAC) = 3 | (padconf << 16);  /* P5_3 is SPI0_SCLK */
+     HW_REG32(PINMUX_BASE, 0xA0) = 4 | (padconf << 16);  /* P5_0 is SPI0_MISO */
+     HW_REG32(PINMUX_BASE, 0xA4) = 4 | (padconf << 16);  /* P5_1 is SPI0_MOSI */
+     HW_REG32(PINMUX_BASE, 0xA8) = 4 | (padconf << 16);  /* P5_2 is SPI0_SS0 */
+     HW_REG32(PINMUX_BASE, 0xAC) = 3 | (padconf << 16);  /* P5_3 is SPI0_SCLK */
+
+   /* HW_REG32(PINMUX_BASE, 0xA0) = 2 | (padconf << 16);  /* P5_0 is SPI0_MISO */
+   // HW_REG32(PINMUX_BASE, 0xA4) = 2 | (padconf << 16);  /* P5_1 is SPI0_MOSI */
+    //HW_REG32(PINMUX_BASE, 0xA8) = 2 | (padconf << 16);  /* P5_2 is SPI0_SS0 */
+    //HW_REG32(PINMUX_BASE, 0xAC) = 2 | (padconf << 16);  /* P5_3 is SPI0_SCLK */
 
     /* DEBUG */
     HW_REG32(PINMUX_BASE, 0xB0) = padconf << 16; /* P5_4 is GPIO5_4 */
@@ -145,6 +153,13 @@ void low_power_sensor_sampling_demo()
     spi_cb_status = 0;
     buffer_select = 1;
 
+    ret = ptrSPI->Control(ARM_SPI_USE_CUSTOM_DMA_MCODE_RX, (uint32_t) &user_spi_rx_mcode[0]);
+    while(ret != ARM_DRIVER_OK);
+
+
+    ret = ptrSPI->Control(ARM_SPI_USE_CUSTOM_DMA_MCODE_TX, (uint32_t) &user_spi_tx_mcode[0]);
+    while(ret != ARM_DRIVER_OK);
+
     do {
         ret = ptrSPI->Transfer(&spi_tx_buff[0], &spi_rx_buff[0], SPI_TRANSFER_COUNT * SPI_TRANSFER_MULTIPLE);
     }
@@ -167,11 +182,11 @@ void low_power_sensor_sampling_demo()
         UTIMER_sync();                  // sync barrier: make sure there is no ongoing SPI xfer
 
         /* switch clocks to PLL */
-#if defined (M55_HP)
+#if defined (CORE_M55_HP)
         CGU->PLL_CLK_SEL |= (1U << 16);         // switch RTSS-HP from HFXO to PLL
         RTSS_HP_CLK=400000000;             // RTSS_HP_CLK is 400M
 #endif
-#if defined (M55_HE)
+#if defined (CORE_M55_HE)
         CGU->PLL_CLK_SEL |= (1U << 20);         // switch RTSS-HE from HFXO to PLL
         RTSS_HE_CLK=120000000;             // RTSS_HE_CLK is 120M
 #endif
@@ -207,11 +222,11 @@ void low_power_sensor_sampling_demo()
         SystemAXIClock = (HFXO_CLK);          // SYST_ACLK is SYSPLL div by 4
         SystemAHBClock = (HFXO_CLK);          // SYST_HCLK is ACLK div by 1
         SystemAPBClock = (HFXO_CLK>>1);       // SYST_PCLK is ACLK div by 2
-#if defined (M55_HP)
+#if defined (CORE_M55_HP)
         RTSS_HP_CLK=HFXO_CLK;
         CGU->PLL_CLK_SEL &= ~(1U << 16);        // switch RTSS-HP from PLL to HFXO
 #endif
-#if defined (M55_HE)
+#if defined (CORE_M55_HE)
         RTSS_HE_CLK=HFXO_CLK;
         CGU->PLL_CLK_SEL &= ~(1U << 20);        // switch RTSS-HE from PLL to HFXO
 #endif

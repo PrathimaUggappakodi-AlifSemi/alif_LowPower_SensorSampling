@@ -1,4 +1,5 @@
-#include <clk.h>
+#include <sys_clocks.h>
+#include <soc.h>
 #include <pm.h>
 #include <pinconf.h>
 #include <cmsis_compiler.h>
@@ -107,7 +108,7 @@ int main()
     SystemAHBClock = current_clk>>1;    // SYST_HCLK is ACLK div by 1, 2, or 4
     SystemAPBClock = current_clk>>2;    // SYST_PCLK is ACLK div by 1, 2, or 4
 
-    SystemCoreClock = current_clk;      // RTSS_HE_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
+   // SystemCoreClock = current_clk;      // RTSS_HE_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
     /*uint32_t current_clk = get_HFXO_CLK();
     set_HFOSC_CLK(current_clk);     // HFOSC clock, used by some peripherals, is either HFRC/2 or HFXO depending on periph_xtal_sel[4]
     set_SOC_REFCLK(current_clk);    // SYST_REFCLK, when not using PLL, is either HFRC or HFXO depending on sys_xtal_sel[0]
@@ -115,17 +116,17 @@ int main()
     set_AHB_CLOCK(current_clk);     // SYST_HCLK is ACLK div by 1, 2, or 4
     set_APB_CLOCK(current_clk>>1);  // SYST_PCLK is ACLK div by 1, 2, or 4*/
 
-    RTSS_HE_CLK = SystemCoreClock;   // RTSS_HE_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
-    RTSS_HP_CLK = SystemCoreClock;   // RTSS_HP_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
+    RTSS_HE_CLK = current_clk;   // RTSS_HE_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
+    RTSS_HP_CLK = current_clk;   // RTSS_HP_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
 
 
     CLKCTL_PER_MST->CAMERA_PIXCLK_CTRL = 100U << 16 | 1;    // output SYST_ACLK/100 on CAM_XVCLK pin
 	pinconf_set(PORT_0, PIN_3, PINMUX_ALTERNATE_FUNCTION_6, 0);                 // P0_3: CAM_XVCLK  (mux mode 6)
     // pinconf_set(PORT_10, PIN_3, PINMUX_ALTERNATE_FUNCTION_7, 0);                // P10_3:CAM_XVCLK  (mux mode 7)
-#if defined (M55_HE)
-    //M55HE_CFG->HE_CAMERA_PIXCLK = 100U << 16 | 1;           // output RTSS_HE_CLK/100 on LPCAM_XVCLK pin
-    //pinconf_set(PORT_0, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P0_3: LPCAM_XVCLK(mux mode 5)
-    //pinconf_set(PORT_1, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P1_3: LPCAM_XVCLK(mux mode 5)
+#if defined (CORE_M55_HE)
+    M55HE_CFG->HE_CAMERA_PIXCLK = 100U << 16 | 1;           // output RTSS_HE_CLK/100 on LPCAM_XVCLK pin
+    pinconf_set(PORT_0, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P0_3: LPCAM_XVCLK(mux mode 5)
+    pinconf_set(PORT_1, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P1_3: LPCAM_XVCLK(mux mode 5)
 #endif
 
     low_power_sensor_sampling_demo();
