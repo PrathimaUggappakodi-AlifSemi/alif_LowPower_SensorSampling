@@ -37,6 +37,7 @@ volatile uint32_t RTSS_HP_CLK;
 int main()
 {
 
+   
     int32_t ret;
     uint32_t reg_data;
     uint32_t service_response;
@@ -79,6 +80,7 @@ int main()
         SERVICES_check_response;
     }
 
+    
     /* refer to the "AON Registers Guide" in the Ensemble Hardware Reference Manual (HWRM) */
     /* Bus Clock Divisor Register (0x20)
      * AXI bus clock depends on above OSC Control and PLL Select registers
@@ -92,13 +94,23 @@ int main()
      * Note: this does not impact the available HFXOx2 clock that is used by RTSS
      */
     reg_data = HW_REG32(AON_BASE, 0x30);
+#if defined(ENSEMBLE_SOC_E1C) || defined(ENSEMBLE_SOC_GEN2)
+    reg_data &= ~(15U << 17);
+    reg_data |=  (2U << 17);        // div by 4
+#else
     reg_data &= ~(15U << 13);
     reg_data |=  (2U << 13);        // div by 4
+#endif
     HW_REG32(AON_BASE, 0x30) = reg_data;
 
     /* Alif Ensemble Development Kit typically uses 38.4MHz HFXO */
-    HFXO_CLK = 9600000;        // top level HFXO clock
+    #if defined(ENSEMBLE_SOC_E1C) || defined(ENSEMBLE_SOC_GEN2)
+    HFXO_CLK = 38400000;
+    #else
+    HFXO_CLK = 9600000;        // top level HFXO clock 
+    #endif
     HFRC_CLK = 76800000;        // top level HFRC clock
+
 
     /* Alif Ensemble Development Kit typically uses 38.4MHz HFXO */
     uint32_t current_clk = HFXO_CLK;
@@ -106,11 +118,11 @@ int main()
     SystemREFClock = current_clk;       // SYST_REFCLK, when not using PLL, is either HFRC or HFXO depending on sys_xtal_sel[0]
     SystemAXIClock = current_clk;       // SYST_ACLK is either REFCLK or SYSPLL (only SYSPLL can be divided by 1-32)
     SystemAHBClock = current_clk>>1;    // SYST_HCLK is ACLK div by 1, 2, or 4
-    SystemAPBClock = current_clk>>2;    // SYST_PCLK is ACLK div by 1, 2, or 4
+    SystemAPBClock = current_clk>>2;    // SYST_PCLK is ACLK div by 1, 2, or 4*/
 
    // SystemCoreClock = current_clk;      // RTSS_HE_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
-    /*uint32_t current_clk = get_HFXO_CLK();
-    set_HFOSC_CLK(current_clk);     // HFOSC clock, used by some peripherals, is either HFRC/2 or HFXO depending on periph_xtal_sel[4]
+   // uint32_t current_clk = get_HFXO_CLK();
+    /*set_HFOSC_CLK(current_clk);     // HFOSC clock, used by some peripherals, is either HFRC/2 or HFXO depending on periph_xtal_sel[4]
     set_SOC_REFCLK(current_clk);    // SYST_REFCLK, when not using PLL, is either HFRC or HFXO depending on sys_xtal_sel[0]
     set_AXI_CLOCK(current_clk);     // SYST_ACLK is either REFCLK or SYSPLL (only SYSPLL can be divided by 1-32)
     set_AHB_CLOCK(current_clk);     // SYST_HCLK is ACLK div by 1, 2, or 4
@@ -120,13 +132,13 @@ int main()
     RTSS_HP_CLK = current_clk;   // RTSS_HP_CLK is HFRC, HFRC/2, HFXOx2, or HFXO
 
 
-    CLKCTL_PER_MST->CAMERA_PIXCLK_CTRL = 100U << 16 | 1;    // output SYST_ACLK/100 on CAM_XVCLK pin
-	pinconf_set(PORT_0, PIN_3, PINMUX_ALTERNATE_FUNCTION_6, 0);                 // P0_3: CAM_XVCLK  (mux mode 6)
+   // CLKCTL_PER_MST->CAMERA_PIXCLK_CTRL = 100U << 16 | 1;    // output SYST_ACLK/100 on CAM_XVCLK pin
+	//pinconf_set(PORT_0, PIN_3, PINMUX_ALTERNATE_FUNCTION_6, 0);                 // P0_3: CAM_XVCLK  (mux mode 6)
     // pinconf_set(PORT_10, PIN_3, PINMUX_ALTERNATE_FUNCTION_7, 0);                // P10_3:CAM_XVCLK  (mux mode 7)
 #if defined (CORE_M55_HE)
     M55HE_CFG->HE_CAMERA_PIXCLK = 100U << 16 | 1;           // output RTSS_HE_CLK/100 on LPCAM_XVCLK pin
     pinconf_set(PORT_0, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P0_3: LPCAM_XVCLK(mux mode 5)
-    pinconf_set(PORT_1, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P1_3: LPCAM_XVCLK(mux mode 5)
+    //pinconf_set(PORT_1, PIN_3, PINMUX_ALTERNATE_FUNCTION_5, 0);                 // P1_3: LPCAM_XVCLK(mux mode 5)
 #endif
 
     low_power_sensor_sampling_demo();
