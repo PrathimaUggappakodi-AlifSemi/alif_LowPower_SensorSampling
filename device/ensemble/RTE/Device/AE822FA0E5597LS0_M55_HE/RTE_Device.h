@@ -2115,7 +2115,7 @@
 //    <1=> ENABLE
 // <i> Defines DMA feature for SPI1
 // <i> Default: DISABLE
-#define RTE_SPI1_DMA_ENABLE           1
+#define RTE_SPI1_DMA_ENABLE           0
 
 // <o> SPI1 DMA IRQ priority <0-255>
 // <i> Defines SPI1 DMA Interrupt priority
