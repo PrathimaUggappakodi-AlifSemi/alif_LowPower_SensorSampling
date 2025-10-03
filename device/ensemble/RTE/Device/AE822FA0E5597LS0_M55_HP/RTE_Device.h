@@ -1985,7 +1985,7 @@
 //    <1=> ENABLE
 // <i> Defines DMA feature for SPI0
 // <i> Default: DISABLE
-#define RTE_SPI0_DMA_ENABLE           0
+#define RTE_SPI0_DMA_ENABLE           1
 
 // <o> SPI0 DMA IRQ priority <0-255>
 // <i> Defines SPI0 DMA Interrupt priority
