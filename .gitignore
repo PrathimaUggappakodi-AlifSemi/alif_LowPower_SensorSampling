@@ -1,8 +1,5 @@
 out/
-RTE/*
-!RTE/Device
-RTE/Device/*/*
-!RTE/Device/*/*.h
 tmp/
 *.yml
 *.cprj
+.clangd
