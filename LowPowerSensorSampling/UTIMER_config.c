@@ -1,10 +1,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <clk.h>
-#include <system_utils.h>
-#include <global_map.h>
-#include <dma_mapping.h>
+#include <sys_clocks.h>
+#include <sys_utils.h>
+#include <soc.h>
+#include <soc_dma_map.h>
 #include <pinconf.h>
 #include <utimer.h>
 

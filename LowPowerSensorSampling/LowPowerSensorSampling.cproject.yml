@@ -8,10 +8,6 @@ project:
         - file: drv_counter.c
         - file: LPTIMER_config.c
         - file: UTIMER_config.c
-        - file: gcc_M55_HE.ld
-          for-context: +HE
-        - file: gcc_M55_HP.ld
-          for-context: +HP
 
   output:
     base-name: $Project$
@@ -19,45 +15,16 @@ project:
       - elf
       - bin
 
-  add-path:
-    - app/
-  components:
-    # needed for Alif Ensemble support
-    - component: ARM::CMSIS:CORE
-    - component: AlifSemiconductor::Device:SOC Peripherals:MHU@1.103.0
-    - component: AlifSemiconductor::Device:SE runtime Services:core&Source@1.103.0
-    - component: AlifSemiconductor::Device:Startup&C Startup@1.3.0
-    - component: AlifSemiconductor::Device:SOC Peripherals:PINCONF@1.3.0
-    - component: AlifSemiconductor::Device:SE runtime Services:Initialization
-        Helper&Source@1.3.0
-    - component: AlifSemiconductor::Device:SOC Peripherals:GPIO@1.3.0
-    - component: AlifSemiconductor::Device:SOC Peripherals:LPTIMER
-    - component: AlifSemiconductor::Device:SOC Peripherals:SPI
-    - component: AlifSemiconductor::Device:SOC Peripherals:DMA
-    # - component: AlifSemiconductor::Device:SOC Peripherals:RTC
-    # - component: AlifSemiconductor::Device:SOC Peripherals:SDMMC
-    # - component: AlifSemiconductor::Device:SOC Peripherals:SPI
-    # - component: AlifSemiconductor::Device:SOC Peripherals:USART
-    # - component: AlifSemiconductor::Device:SOC Peripherals:UTIMER
-    # - component: AlifSemiconductor::Device:SOC Peripherals:WDT
+  layers:
+    - layer: ../device/ensemble/alif-ensemble.clayer.yml
 
-    # - component: AlifSemiconductor::Device:OSPI FLASH XIP:core
-    # - component: AlifSemiconductor::Device:OSPI FLASH XIP:utility
-    # - component: AlifSemiconductor::Device:OSPI HYPERRAM XIP
-    # - component: AlifSemiconductor::Device:SE runtime Services:Initialization Helper&Source
-    # - component: AlifSemiconductor::Device:SE runtime Services:core&Source
+  linker:
+    - regions: "../device/ensemble/RTE/Device/$Dname$_$Pname$/app_mem_regions.h"
+    - script: "../device/ensemble/RTE/Device/$Dname$_$Pname$/linker_gnu_mram.ld.src"
 
-    # - component: AlifSemiconductor::BSP:External peripherals:CAMERA Sensor MT9M114
-    # - component: AlifSemiconductor::BSP:External peripherals:CAMERA Sensor ARX3A0
-    # - component: AlifSemiconductor::BSP:External peripherals:CAMERA Sensor AR0144
-    # - component: AlifSemiconductor::BSP:External peripherals:Ethernet PHY
-    # - component: AlifSemiconductor::BSP:External peripherals:GT911 Touch Controller
-    # - component: AlifSemiconductor::BSP:External peripherals:ILI9806E LCD panel
-    # - component: AlifSemiconductor::BSP:External peripherals:OSPI Flash ISSI
-    # - component: AlifSemiconductor::Device:Conductor Tool support
-    # - component: AlifSemiconductor::Device:Power Management
-    # - component: AlifSemiconductor::Device:Retarget IO:STDERR
-    # - component: AlifSemiconductor::Device:Retarget IO:STDIN
-    # - component: AlifSemiconductor::Device:Retarget IO:STDOUT
   packs:
-    - pack: AlifSemiconductor::Ensemble@1.3.3
+    - pack: AlifSemiconductor::Ensemble@2.0.2
+  components:
+    - component: AlifSemiconductor::Device:SOC Peripherals:DMA
+    - component: AlifSemiconductor::Device:SOC Peripherals:LPTIMER
+    - component: AlifSemiconductor::CMSIS Driver:SPI

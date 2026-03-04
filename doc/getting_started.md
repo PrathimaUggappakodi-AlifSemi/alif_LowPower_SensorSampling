@@ -4,7 +4,7 @@ Application Note
 
 **Low Power Sensor Sampling demo**
 
-**Version 1.0**
+**Version 1.1**
 
 **  
 **
@@ -80,9 +80,9 @@ To begin measuring power you will need to remove the jumper that is pre-installe
 
 1.  Setup the VSCode environment as outlined in [Getting Started with VSCode](https://github.com/alifsemi/alif_vscode-template).
 
-2.  Modify the Alif Ensemble CMSIS DFP v1.3.3 with the files provided in this project
+2.  This project works with CMSIS 2.0.2 and higher
 
-    - Extract the archive in the patch directory and overwrite the files with the changes at cmsis-packs/AlifSemiconductor/Ensemble/1.3.3/
+    - Modify the soc_dma_mapping.h as present in the patch directory.
 
 3.  Install the latest SEGGER J-Link software (optional) [SEGGER J-Link](https://www.segger.com/downloads/jlink)
 

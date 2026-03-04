@@ -1,6 +1,6 @@
 #include "drv_counter.h"
 //#include "soc_clk.h"
-#include "clk.h"
+#include "sys_clocks.h"
 
 void refclk_cntr_init() {
     *((volatile uint32_t *)0x1A200000) = 1;
