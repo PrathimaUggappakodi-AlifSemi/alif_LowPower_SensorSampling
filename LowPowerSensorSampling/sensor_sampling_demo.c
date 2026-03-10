@@ -24,6 +24,10 @@
 #define HW_REG32(u,v) (*((volatile uint32_t *)(u + v)))
 #endif
 
+#if SPI0_DMA_TX_PERIPH_REQ == 20
+#error "required edit in soc_dma_map.h - change SPI0_DMA_TX_PERIPH_REQ to 1"
+#endif
+
 #define SERVICES_check_response {if ((ret != 0) || (service_response != 0)) while(1) __WFI();}
 
 #define SPI_INSTANCE            0
